@@ -31,6 +31,9 @@ contract RetroDrop is Ownable {
     /// @notice Event emitted when the backend signer address is updated
     event BackendSignerChanged(address newBackendSigner);
 
+    /// @notice Event emitted when activity points for claim are updated
+    event ActivityPointsForClaimUpdated(uint256 newPoints);
+
     /**
      * @dev Constructor initializes the contract with a backend signer address.
      * @param _backendSigner The address of the backend signer
@@ -72,6 +75,18 @@ contract RetroDrop is Ownable {
         backendSigner = newSigner;
 
         emit BackendSignerChanged(newSigner);
+    }
+
+    /**
+     * @dev Updates the number of activity points awarded per claim. Only the contract owner can call this function.
+     * @param newPoints The new value for activity points per claim
+     */
+    function setActivityPointsForClaim(uint256 newPoints) external onlyOwner {
+        require(newPoints > 0, "Points must be greater than zero");
+
+        activityPointsForClaim = newPoints;
+
+        emit ActivityPointsForClaimUpdated(newPoints);
     }
 
     /**
