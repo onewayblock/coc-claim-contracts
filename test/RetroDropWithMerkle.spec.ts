@@ -22,10 +22,10 @@ describe('RetroDropWithMerkle Contract', () => {
   let merkleRoot: string;
 
   const points = 100;
-  const participants: (string | number)[][] = [];
+  const participants: any[][] = [];
 
   before(async () => {
-    [owner, user, user1, user2, user3, , user4, user5, nonParticipant, nonParticipant1, nonParticipant2, nonParticipant3] = await ethers.getSigners();
+    [owner, user, user1, user2, user3, user4, user5, nonParticipant, nonParticipant1, nonParticipant2, nonParticipant3] = await ethers.getSigners();
     participants.push(
       [user.address, points],
       [user1.address, points],
@@ -34,14 +34,13 @@ describe('RetroDropWithMerkle Contract', () => {
       [user4.address, points],
       [user5.address, points]
     );
-
     merkleTree = StandardMerkleTree.of(participants, ['address', 'uint256']);
     merkleRoot = merkleTree.root;
   });
 
   beforeEach(async () => {
     const RetroDrop = await ethers.getContractFactory('RetroDropWithMerkle');
-    retroDrop = await RetroDrop.deploy(merkleRoot);
+    retroDrop = await RetroDrop.deploy(merkleRoot, owner.address);
     await retroDrop.waitForDeployment();
   });
 
@@ -72,7 +71,7 @@ describe('RetroDropWithMerkle Contract', () => {
 
       await expect(retroDrop.connect(user).claimPoints(points, proof)).to.emit(retroDrop, 'PointsClaimed').withArgs(user.address, points);
 
-      expect(await retroDrop.hasClaimed(user.address)).to.be.true;
+      expect(await retroDrop.claimedPoints(user.address)).to.be.equal(points);
     });
 
     it('Should allow all users to claim points with a valid proof and revert users that are not participating in the drop', async () => {
@@ -81,7 +80,7 @@ describe('RetroDropWithMerkle Contract', () => {
       for (const participant of users) {
         const proof = merkleTree.getProof([participant.address, points]);
         await expect(retroDrop.connect(participant).claimPoints(points, proof)).to.emit(retroDrop, 'PointsClaimed').withArgs(participant.address, points);
-        expect(await retroDrop.hasClaimed(participant.address)).to.be.true;
+        expect(await retroDrop.claimedPoints(participant.address)).to.be.equal(points);
       }
 
       const nonParticipants = [nonParticipant, nonParticipant1, nonParticipant2, nonParticipant3];
@@ -92,7 +91,7 @@ describe('RetroDropWithMerkle Contract', () => {
         } catch (error) {
           proof = [];
         }
-        await expect(retroDrop.connect(non).claimPoints(points, proof)).to.be.revertedWith('Invalid proof');
+        await expect(retroDrop.connect(non).claimPoints(points, proof)).to.be.revertedWithCustomError(retroDrop, 'InvalidProof()');
       }
     });
 
@@ -101,12 +100,12 @@ describe('RetroDropWithMerkle Contract', () => {
 
       await retroDrop.connect(user).claimPoints(points, proof);
 
-      await expect(retroDrop.connect(user).claimPoints(points, proof)).to.be.revertedWith('Points already claimed');
+      await expect(retroDrop.connect(user).claimPoints(points, proof)).to.be.revertedWithCustomError(retroDrop, 'PointsAlreadyClaimed()');
     });
 
     it('Should not allow a user to claim points with an invalid proof', async () => {
       const invalidProof: string[] = [];
-      await expect(retroDrop.connect(user).claimPoints(points, invalidProof)).to.be.revertedWith('Invalid proof');
+      await expect(retroDrop.connect(user).claimPoints(points, invalidProof)).to.be.revertedWithCustomError(retroDrop, 'InvalidProof()');
     });
 
     it('Should not allow a non-participant to claim points', async () => {
@@ -117,7 +116,7 @@ describe('RetroDropWithMerkle Contract', () => {
         proof = [];
       }
 
-      await expect(retroDrop.connect(nonParticipant).claimPoints(points, proof)).to.be.revertedWith('Invalid proof');
+      await expect(retroDrop.connect(nonParticipant).claimPoints(points, proof)).to.be.revertedWithCustomError(retroDrop, 'InvalidProof()');
     });
   });
 

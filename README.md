@@ -5,8 +5,7 @@
 This repository contains two smart contracts designed for managing point claims on-chain. Each contract has unique features and use cases tailored to specific scenarios:
 
 1. **ClaimSoftCurrency**: A contract allowing users to claim points periodically, relying on backend-generated signatures for validation.
-2. **RetroDrop**: A contract enabling eligible users to make a one-time claim of points using verified backend signatures.
-3. **RetroDropWithMerkle**: A contract enabling eligible users to make a one-time claim of points using a Merkle tree for verifying user eligibility.
+2. **RetroDropWithMerkle**: A contract enabling eligible users to make a one-time claim of points using a Merkle tree for verifying user eligibility.
 
 ## Contracts
 
@@ -39,8 +38,8 @@ This repository contains two smart contracts designed for managing point claims 
 
 #### Purpose
 
-- Allows eligible users to make a one-time claim of points as a reward for meeting specific criteria, e.g. interacting with smart contracts on Base chain.
-- uses a Merkle tree for eligibility verification.
+- Allows eligible users to make a one-time claim of points as a reward for meeting specific criteria, e.g., interacting with smart contracts on Base chain.
+- Uses a Merkle tree for eligibility verification.
 - Provides a gas-efficient and secure method for proving user participation.
 
 #### Workflow
@@ -66,9 +65,34 @@ This repository contains two smart contracts designed for managing point claims 
 
 ## Security Considerations
 
-- **Backend Trust**: `ClaimSoftCurrency` rely on the integrity of the backend for generating valid signatures.
+- **Backend Trust**: `ClaimSoftCurrency` relies on the integrity of the backend for generating valid signatures.
 - **Replay Protection**: All contracts implement nonce or Merkle proof mechanisms to prevent replay attacks.
 - **Ownership**: Sensitive functions like updating the backend signer or Merkle root are restricted to the contract owner.
+
+---
+
+## Dependencies and Setup
+
+### Prerequisites
+
+1. **Node.js**: Ensure you have Node.js installed. Recommended version aligns with the `hardhat` version specified in the project.
+2. **Hardhat**: A development environment for Ethereum.
+3. **Typescript**: Install the necessary TypeScript dependencies for testing and development.
+
+### Installation
+
+1. Clone the repository.
+2. Run `npm install` to install dependencies.
+3. If additional dependencies are needed, they will be listed in the `package.json` file.
+
+### Testing
+
+Run the following command to execute the tests:
+
+```bash
+npx hardhat compile
+npx hardhat test
+```
 
 ---
 
