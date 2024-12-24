@@ -67,7 +67,7 @@ contract RetroDropWithMerkle is Ownable {
         uint256 points,
         bytes32[] calldata proof
     ) external view returns (bool) {
-        if (hasClaimed[msg.sender]) {
+        if (hasClaimed[user]) {
             return false;
         }
 
