@@ -1,7 +1,7 @@
 {
   "_comment": "This is an example JSON structure with metadata for demonstration purposes.",
   "ClaimRewards": {
-    "merkleRoot": "0x3971ed1ca18e13058c9074e3d3f9f957e876638c5c4b3538364512c3272b0429",
+    "backendSigner": "0x000000000000b095d18ea0bad480d762bb33b7c6",
     "owner": "0x000000000000b095d18ea0bad480d762bb33b7c6"
   }
 }
