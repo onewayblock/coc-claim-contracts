@@ -7,7 +7,17 @@ import keccak256 from 'keccak256';
 
 describe('RetroDropWithMerkle Contract', () => {
   let retroDrop: RetroDropWithMerkle;
-  let owner: SignerWithAddress, user: SignerWithAddress, user1: SignerWithAddress, nonParticipant: SignerWithAddress;
+  let owner: SignerWithAddress,
+    user: SignerWithAddress,
+    user1: SignerWithAddress,
+    user2: SignerWithAddress,
+    user3: SignerWithAddress,
+    user4: SignerWithAddress,
+    user5: SignerWithAddress,
+    nonParticipant: SignerWithAddress,
+    nonParticipant1: SignerWithAddress,
+    nonParticipant2: SignerWithAddress,
+    nonParticipant3: SignerWithAddress;
   let merkleTree: StandardMerkleTree<any[]>;
   let merkleRoot: string;
 
@@ -15,8 +25,15 @@ describe('RetroDropWithMerkle Contract', () => {
   const participants: (string | number)[][] = [];
 
   before(async () => {
-    [owner, user, user1, nonParticipant] = await ethers.getSigners();
-    participants.push([user.address, points], [user1.address, points]);
+    [owner, user, user1, user2, user3, , user4, user5, nonParticipant, nonParticipant1, nonParticipant2, nonParticipant3] = await ethers.getSigners();
+    participants.push(
+      [user.address, points],
+      [user1.address, points],
+      [user2.address, points],
+      [user3.address, points],
+      [user4.address, points],
+      [user5.address, points]
+    );
 
     merkleTree = StandardMerkleTree.of(participants, ['address', 'uint256']);
     merkleRoot = merkleTree.root;
@@ -56,6 +73,27 @@ describe('RetroDropWithMerkle Contract', () => {
       await expect(retroDrop.connect(user).claimPoints(points, proof)).to.emit(retroDrop, 'PointsClaimed').withArgs(user.address, points);
 
       expect(await retroDrop.hasClaimed(user.address)).to.be.true;
+    });
+
+    it('Should allow all users to claim points with a valid proof and revert users that are not participating in the drop', async () => {
+      const users = [user, user1, user2, user3, user4, user5];
+
+      for (const participant of users) {
+        const proof = merkleTree.getProof([participant.address, points]);
+        await expect(retroDrop.connect(participant).claimPoints(points, proof)).to.emit(retroDrop, 'PointsClaimed').withArgs(participant.address, points);
+        expect(await retroDrop.hasClaimed(participant.address)).to.be.true;
+      }
+
+      const nonParticipants = [nonParticipant, nonParticipant1, nonParticipant2, nonParticipant3];
+      for (const non of nonParticipants) {
+        let proof: any;
+        try {
+          proof = merkleTree.getProof([non.address, points]);
+        } catch (error) {
+          proof = [];
+        }
+        await expect(retroDrop.connect(non).claimPoints(points, proof)).to.be.revertedWith('Invalid proof');
+      }
     });
 
     it('Should not allow a user to claim points more than once', async () => {
