@@ -12,7 +12,7 @@ describe('Claim Contract', () => {
     [owner, user, backendSigner, newSigner] = await ethers.getSigners();
 
     const Claim = await ethers.getContractFactory('ClaimSoftCurrency');
-    claim = await Claim.deploy(backendSigner.address);
+    claim = await Claim.deploy(backendSigner.address, owner.address);
     await claim.waitForDeployment();
   });
 
@@ -25,7 +25,7 @@ describe('Claim Contract', () => {
   describe('Claim Points', () => {
     it('Should allow a user to claim points with a valid signature', async () => {
       const pointsToClaim = 10;
-      const nonce = 1;
+      const nonce = await claim.nonces(user.address);
 
       const messageHash = ethers.keccak256(
         ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
@@ -33,7 +33,7 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
+      await expect(claim.connect(user).claimPoints(pointsToClaim, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
       expect(claimedPoints).to.equal(pointsToClaim);
@@ -41,7 +41,7 @@ describe('Claim Contract', () => {
 
     it('Should not allow a user to claim points with an invalid signature', async () => {
       const pointsToClaim = 10;
-      const nonce = 1;
+      const nonce = await claim.nonces(user.address);
 
       const invalidSignature = await newSigner.signMessage(
         ethers.getBytes(
@@ -51,12 +51,12 @@ describe('Claim Contract', () => {
         )
       );
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, invalidSignature)).to.be.revertedWith('Invalid signature');
+      await expect(claim.connect(user).claimPoints(pointsToClaim, invalidSignature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
     });
 
     it('Should not allow a user to reuse the same signature (replay protection)', async () => {
       const pointsToClaim = 10;
-      const nonce = 1;
+      const nonce = await claim.nonces(user.address);
 
       const messageHash = ethers.keccak256(
         ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
@@ -64,9 +64,9 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await claim.connect(user).claimPoints(pointsToClaim, nonce, signature);
+      await claim.connect(user).claimPoints(pointsToClaim, signature);
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, signature)).to.be.revertedWith('Tx already executed');
+      await expect(claim.connect(user).claimPoints(pointsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
     });
   });
 
@@ -87,7 +87,7 @@ describe('Claim Contract', () => {
       await claim.connect(owner).setBackendSigner(newSigner.address);
 
       const pointsToClaim = 20;
-      const nonce = 2;
+      const nonce = await claim.nonces(user.address);
 
       const messageHash = ethers.keccak256(
         ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
@@ -95,7 +95,7 @@ describe('Claim Contract', () => {
 
       const signature = await newSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
+      await expect(claim.connect(user).claimPoints(pointsToClaim, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
       expect(claimedPoints).to.equal(pointsToClaim);

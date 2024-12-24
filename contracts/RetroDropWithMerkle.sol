@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.17;
+pragma solidity 0.8.27;
 
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
@@ -13,7 +13,12 @@ contract RetroDropWithMerkle is Ownable {
     bytes32 public merkleRoot;
 
     /// @notice Tracks whether a user has claimed their points
-    mapping(address => bool) public hasClaimed;
+    mapping(address => uint256) public claimedPoints;
+
+    /// @notice Custom errors
+    error PointsAlreadyClaimed();
+    error InvalidProof();
+    error InvalidPoints();
 
     /// @notice Event emitted when the Merkle root is updated
     event MerkleRootUpdated(bytes32 newMerkleRoot);
@@ -21,9 +26,12 @@ contract RetroDropWithMerkle is Ownable {
     /// @notice Event emitted when points are claimed
     event PointsClaimed(address indexed user, uint256 points);
 
-    /// @dev Constructor initializes the contract with a Merkle root
-    /// @param _merkleRoot The initial Merkle tree root
-    constructor(bytes32 _merkleRoot) Ownable(msg.sender) {
+    /**
+     * @dev Constructor initializes the contract with a Merkle root and owner address.
+     * @param _merkleRoot The initial Merkle tree root
+     * @param _owner The address of the contract owner
+     */
+    constructor(bytes32 _merkleRoot, address _owner) Ownable(_owner) {
         merkleRoot = _merkleRoot;
     }
 
@@ -42,15 +50,21 @@ contract RetroDropWithMerkle is Ownable {
      * @param proof The Merkle proof verifying the user's eligibility
      */
     function claimPoints(uint256 points, bytes32[] calldata proof) external {
-        require(!hasClaimed[msg.sender], "Points already claimed");
-        require(points > 0, "Points must be greater than 0");
+        if (claimedPoints[msg.sender] > 0) {
+            revert PointsAlreadyClaimed();
+        }
+        if (points == 0) {
+            revert InvalidPoints();
+        }
 
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(msg.sender, points)))
         );
-        require(MerkleProof.verify(proof, merkleRoot, leaf), "Invalid proof");
+        if (!MerkleProof.verify(proof, merkleRoot, leaf)) {
+            revert InvalidProof();
+        }
 
-        hasClaimed[msg.sender] = true;
+        claimedPoints[msg.sender] = points;
 
         emit PointsClaimed(msg.sender, points);
     }
@@ -67,7 +81,7 @@ contract RetroDropWithMerkle is Ownable {
         uint256 points,
         bytes32[] calldata proof
     ) external view returns (bool) {
-        if (hasClaimed[user]) {
+        if (claimedPoints[user] > 0 || points == 0) {
             return false;
         }
 
