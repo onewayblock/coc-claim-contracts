@@ -43,6 +43,7 @@ contract RetroDropWithMerkle is Ownable {
      */
     function claimPoints(uint256 points, bytes32[] calldata proof) external {
         require(!hasClaimed[msg.sender], "Points already claimed");
+        require(points > 0, "Points must be greater than 0");
 
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(msg.sender, points)))
@@ -66,6 +67,10 @@ contract RetroDropWithMerkle is Ownable {
         uint256 points,
         bytes32[] calldata proof
     ) external view returns (bool) {
+        if (hasClaimed[msg.sender]) {
+            return false;
+        }
+
         bytes32 leaf = keccak256(
             bytes.concat(keccak256(abi.encode(user, points)))
         );

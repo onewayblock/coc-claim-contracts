@@ -11,7 +11,7 @@ describe('Claim Contract', () => {
   beforeEach(async () => {
     [owner, user, backendSigner, newSigner] = await ethers.getSigners();
 
-    const Claim = await ethers.getContractFactory('Claim');
+    const Claim = await ethers.getContractFactory('ClaimSoftCurrency');
     claim = await Claim.deploy(backendSigner.address);
     await claim.waitForDeployment();
   });
@@ -33,9 +33,7 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, chainId, signature))
-        .to.emit(claim, 'PointsClaimed')
-        .withArgs(user.address, pointsToClaim);
+      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
       expect(claimedPoints).to.equal(pointsToClaim);
@@ -53,7 +51,7 @@ describe('Claim Contract', () => {
         )
       );
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, chainId, invalidSignature)).to.be.revertedWith('Invalid signature');
+      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, invalidSignature)).to.be.revertedWith('Invalid signature');
     });
 
     it('Should not allow a user to reuse the same signature (replay protection)', async () => {
@@ -66,9 +64,9 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await claim.connect(user).claimPoints(pointsToClaim, nonce, chainId, signature);
+      await claim.connect(user).claimPoints(pointsToClaim, nonce, signature);
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, chainId, signature)).to.be.revertedWith('Tx already executed');
+      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, signature)).to.be.revertedWith('Tx already executed');
     });
   });
 
@@ -97,9 +95,7 @@ describe('Claim Contract', () => {
 
       const signature = await newSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, chainId, signature))
-        .to.emit(claim, 'PointsClaimed')
-        .withArgs(user.address, pointsToClaim);
+      await expect(claim.connect(user).claimPoints(pointsToClaim, nonce, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
       expect(claimedPoints).to.equal(pointsToClaim);
