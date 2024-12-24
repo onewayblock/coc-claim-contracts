@@ -10,14 +10,6 @@ const config: HardhatUserConfig = {
   networks: isDevelopment
     ? {}
     : {
-        'ethereum-mainnet': {
-          url: `https://eth-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-          accounts: [process.env.PRIVATE_KEY!],
-        },
-        'ethereum-sepolia': {
-          url: `https://eth-sepolia.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
-          accounts: [process.env.PRIVATE_KEY!],
-        },
         'base-mainnet': {
           url: `https://base-mainnet.g.alchemy.com/v2/${process.env.ALCHEMY_API_KEY}`,
           accounts: [process.env.PRIVATE_KEY!],
@@ -32,8 +24,6 @@ const config: HardhatUserConfig = {
     : {
         enabled: true,
         apiKey: {
-          'ethereum-mainnet': process.env.ETHERSCAN_API_KEY!,
-          'ethereum-sepolia': process.env.ETHERSCAN_API_KEY!,
           'base-mainnet': process.env.BASESCAN_API_KEY!,
           'base-sepolia': process.env.BASESCAN_API_KEY!,
         },

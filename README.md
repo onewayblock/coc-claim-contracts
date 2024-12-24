@@ -33,7 +33,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 #### Key Functions
 
-- `claimPoints(uint256 points, uint256 nonce, uint256 chainId, bytes memory signature)`: Allows users to claim points after verifying the backend's signature.
+- `claimPoints(uint256 points, bytes memory signature)`: Allows users to claim points after verifying the backend's signature.
 - `setBackendSigner(address newSigner)`: Updates the address of the backend signer (restricted to the owner).
 
 ### 2. **RetroDropWithMerkle**
@@ -65,17 +65,32 @@ This repository contains two smart contracts designed for managing point claims 
 
 ---
 
+## Error Descriptions
+
+### ClaimSoftCurrency
+
+- `InvalidSigner()`: Reverts when the signer of the message is invalid or unauthorized.
+- `InvalidSignerAddress()`: Reverts when the provided signer address is invalid (e.g., zero address).
+
+### RetroDropWithMerkle
+
+- `PointsAlreadyClaimed()`: Reverts when a user tries to claim points more than once.
+- `InvalidProof()`: Reverts when the provided Merkle proof is invalid.
+- `InvalidPoints()`: Reverts when the provided points value is zero or invalid.
+
+---
+
 ## Events
 
 - **ClaimSoftCurrency**:
 
-  - `PointsClaimed(address indexed user, uint256 points)`
-  - `BackendSignerChanged(address newBackendSigner)`
+  - `PointsClaimed(address indexed user, uint256 points)`: Event emitted when points are successfully claimed
+  - `BackendSignerChanged(address newBackendSigner)`: Event emitted when the backend signer address is updated
 
 - **RetroDropWithMerkle**:
 
-  - `PointsClaimed(address indexed user, uint256 points)`
-  - `MerkleRootUpdated(bytes32 newMerkleRoot)`
+  - `PointClaimed(address indexed user, uint256 points)`: Event emitted when points are claimed
+  - `MerkleRootUpdated(bytes32 newMerkleRoot)`: Event emitted when the Merkle root is updated
 
 ---
 
@@ -91,7 +106,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 ### Prerequisites
 
-1. **Node.js**: Ensure you have Node.js installed. The **recommended version is v22 or higher** for optimal compatibility.
+1. **Node.js**: Ensure you have Node.js installed. The **recommended version is v22.9.0** for optimal compatibility.
 2. **Hardhat**: A development environment for Ethereum.
 3. **TypeScript**: Install the necessary TypeScript dependencies for testing and development.
 
@@ -108,39 +123,53 @@ Ensure you create a `.env` file at the root of the project if you plan to use th
 ```plaintext
 PRIVATE_KEY= # Your private key for deploying contracts
 ALCHEMY_API_KEY= # API key for Alchemy (or other provider)
-ETHERSCAN_API_KEY= # API key for contract verification on Etherscan
 BASESCAN_API_KEY= # API key for contract verification on BaseScan
 ```
 
 ---
 
-## Testing
+## Testing and Deployment
+
+### Testing
 
 Run the following commands to compile and test the contracts:
 
 ```bash
-npm install
 npm run compile
 npm run test
 ```
 
----
+### Deployment
 
-## Deployment Instructions
+Use Hardhat Ignition for deployment. Deployment modules are provided in the `./ignition` folder.
 
-To deploy the contracts, use Hardhat Ignition. Each contract has a separate deployment module:
+1. **ClaimSoftCurrencyModule**:
+
+   - **Parameters**:
+     - `owner`: The contract owner.
+     - `backendSigner`: The address of the backend signer.
+   - Example parameter file: `./ignition/parameters/ClaimSoftCurrency.json`
+
+2. **RetroDropWithMerkleModule**:
+   - **Parameters**:
+     - `owner`: The contract owner.
+     - `merkleRoot`: The Merkle root used for proof validation.
+   - Example parameter file: `./ignition/parameters/RetroDropWithMerkle.json`
+
+Note: All values in those JSON files are test values and do not correspond to real data.
+
+Example deployment commands:
 
 1. **ClaimSoftCurrency**:
 
    ```bash
-   npx hardhat ignition deploy ./ignition/modules/ClaimSoftCurrency.ts --network <network> --verify
+   npx hardhat ignition deploy ./ignition/modules/ClaimSoftCurrency.ts --parameters ./ignition/parameters/ClaimSoftCurrency.json --network <network> --verify
    ```
 
 2. **RetroDropWithMerkle**:
-
    ```bash
-   npx hardhat ignition deploy ./ignition/modules/RetroDropWithMerkle.ts --network <network> --verify
+   npx hardhat ignition deploy ./ignition/modules/RetroDropWithMerkle.ts --parameters ./ignition/parameters/RetroDropWithMerkle.json --network <network> --verify
    ```
 
-Replace `<network>` with your desired network (e.g., `base-mainnet`, `ethereum-mainnet`, etc.). You can see list of networks in `hardhat.config.ts` file.
+Replace `<network>` with your desired network (e.g., `base-mainnet`, `base-sepolia`). You can see list of networks in `hardhat.config.ts` file.
 Use the `--verify` flag if the appropriate API key for contract verification is provided in the `.env` file.

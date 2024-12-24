@@ -13,18 +13,22 @@ contract RetroDropWithMerkle is Ownable {
     bytes32 public merkleRoot;
 
     /// @notice Tracks whether a user has claimed their points
-    mapping(address => uint256) public claimedPoints;
+    mapping(address => uint256) public pointClaimed;
 
-    /// @notice Custom errors
+    /// @notice Reverts when a user tries to claim points more than once
     error PointsAlreadyClaimed();
+
+    /// @notice Reverts when the provided Merkle proof is invalid
     error InvalidProof();
+
+    /// @notice Reverts when the provided points value is zero or invalid
     error InvalidPoints();
 
     /// @notice Event emitted when the Merkle root is updated
     event MerkleRootUpdated(bytes32 newMerkleRoot);
 
     /// @notice Event emitted when points are claimed
-    event PointsClaimed(address indexed user, uint256 points);
+    event PointClaimed(address indexed user, uint256 points);
 
     /**
      * @dev Constructor initializes the contract with a Merkle root and owner address.
@@ -50,7 +54,7 @@ contract RetroDropWithMerkle is Ownable {
      * @param proof The Merkle proof verifying the user's eligibility
      */
     function claimPoints(uint256 points, bytes32[] calldata proof) external {
-        if (claimedPoints[msg.sender] > 0) {
+        if (pointClaimed[msg.sender] > 0) {
             revert PointsAlreadyClaimed();
         }
         if (points == 0) {
@@ -64,9 +68,9 @@ contract RetroDropWithMerkle is Ownable {
             revert InvalidProof();
         }
 
-        claimedPoints[msg.sender] = points;
+        pointClaimed[msg.sender] = points;
 
-        emit PointsClaimed(msg.sender, points);
+        emit PointClaimed(msg.sender, points);
     }
 
     /**
@@ -81,7 +85,7 @@ contract RetroDropWithMerkle is Ownable {
         uint256 points,
         bytes32[] calldata proof
     ) external view returns (bool) {
-        if (claimedPoints[user] > 0 || points == 0) {
+        if (pointClaimed[user] > 0 || points == 0) {
             return false;
         }
 
