@@ -1,17 +1,17 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { ClaimSoftCurrency } from '../typechain-types';
+import { ClaimRewards } from '../typechain-types';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('Claim Contract', () => {
-  let claim: ClaimSoftCurrency;
+  let claim: ClaimRewards;
   let owner: SignerWithAddress, user: SignerWithAddress, backendSigner: SignerWithAddress, newSigner: SignerWithAddress;
   const chainId = 31337;
 
   beforeEach(async () => {
     [owner, user, backendSigner, newSigner] = await ethers.getSigners();
 
-    const Claim = await ethers.getContractFactory('ClaimSoftCurrency');
+    const Claim = await ethers.getContractFactory('ClaimRewards');
     claim = await Claim.deploy(backendSigner.address, owner.address);
     await claim.waitForDeployment();
   });
@@ -37,8 +37,8 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature))
-        .to.emit(claim, 'CurrencyClaimed')
+      await expect(claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, signature))
+        .to.emit(claim, 'RewardsClaimed')
         .withArgs(user.address, pointsToClaim, coinsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
@@ -61,7 +61,7 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidPoints()');
+      await expect(claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidPoints()');
     });
 
     it('Should not allow a user to claim 0 coins', async () => {
@@ -78,7 +78,7 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidCoins()');
+      await expect(claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidCoins()');
     });
 
     it('Should not allow a user to claim points with an invalid signature', async () => {
@@ -98,7 +98,7 @@ describe('Claim Contract', () => {
         )
       );
 
-      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, invalidSignature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
+      await expect(claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, invalidSignature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
     });
 
     it('Should not allow a user to reuse the same signature (replay protection)', async () => {
@@ -116,9 +116,9 @@ describe('Claim Contract', () => {
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature);
+      await claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, signature);
 
-      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
+      await expect(claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
     });
   });
 
@@ -152,8 +152,8 @@ describe('Claim Contract', () => {
 
       const signature = await newSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature))
-        .to.emit(claim, 'CurrencyClaimed')
+      await expect(claim.connect(user).claimRewards(pointsToClaim, coinsToClaim, signature))
+        .to.emit(claim, 'RewardsClaimed')
         .withArgs(user.address, pointsToClaim, coinsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);

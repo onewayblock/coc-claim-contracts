@@ -1,17 +1,17 @@
-# ClaimSoftCurrency and RetroDropWithMerkle Contracts
+# ClaimRewards and RetroDropWithMerkle Contracts
 
 ## Overview
 
 This repository contains two smart contracts designed for managing point claims on-chain. Each contract has unique features and use cases tailored to specific scenarios:
 
-1. **ClaimSoftCurrency**: A contract allowing users to claim currency periodically, relying on backend-generated signatures for validation.
+1. **ClaimRewards**: A contract allowing users to claim rewards periodically, relying on backend-generated signatures for validation.
 2. **RetroDropWithMerkle**: A contract enabling eligible users to make a one-time claim of points using a Merkle tree for verifying user eligibility.
 
 ---
 
 ## Contracts
 
-### 1. **ClaimSoftCurrency**
+### 1. **ClaimRewards**
 
 #### Purpose
 
@@ -23,7 +23,7 @@ This repository contains two smart contracts designed for managing point claims 
 1. A user triggers a claim action via the frontend.
 2. The backend verifies the user's eligibility and generates a signature.
 3. The user sends an on-chain transaction with the provided signature.
-4. The contract validates the signature and updates the user's claimed currency.
+4. The contract validates the signature and updates the user's claimed rewards.
 
 #### Key Features
 
@@ -33,7 +33,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 #### Key Functions
 
-- `claimCurrency(uint256 points, uint256 coins, bytes memory signature)`: Allows users to claim currency after verifying the backend's signature.
+- `claimRewards(uint256 points, uint256 coins, bytes memory signature)`: Allows users to claim rewards after verifying the backend's signature.
 - `setBackendSigner(address newSigner)`: Updates the address of the backend signer (restricted to the owner).
 
 ### 2. **RetroDropWithMerkle**
@@ -67,7 +67,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 ## Error Descriptions
 
-### ClaimSoftCurrency
+### ClaimRewards
 
 - `InvalidSigner()`: Reverts when the signer of the message is invalid or unauthorized.
 - `InvalidSignerAddress()`: Reverts when the provided signer address is invalid (e.g., zero address).
@@ -84,9 +84,9 @@ This repository contains two smart contracts designed for managing point claims 
 
 ## Events
 
-- **ClaimSoftCurrency**:
+- **ClaimRewards**:
 
-  - `CurrencyClaimed(address indexed user, uint256 points, uint256 coins)`: Event emitted when points and coins are successfully claimed
+  - `RewardsClaimed(address indexed user, uint256 points, uint256 coins)`: Event emitted when points and coins are successfully claimed
   - `BackendSignerChanged(address newBackendSigner)`: Event emitted when the backend signer address is updated
 
 - **RetroDropWithMerkle**:
@@ -98,7 +98,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 ## Security Considerations
 
-- **Backend Trust**: `ClaimSoftCurrency` relies on the integrity of the backend for generating valid signatures.
+- **Backend Trust**: `ClaimRewards` relies on the integrity of the backend for generating valid signatures.
 - **Replay Protection**: All contracts implement nonce or Merkle proof mechanisms to prevent replay attacks.
 - **Ownership**: Sensitive functions like updating the backend signer or Merkle root are restricted to the contract owner.
 
@@ -145,12 +145,12 @@ npm run test
 
 Use Hardhat Ignition for deployment. Deployment modules are provided in the `./ignition` folder.
 
-1. **ClaimSoftCurrencyModule**:
+1. **ClaimRewardsModule**:
 
    - **Parameters**:
      - `owner`: The contract owner.
      - `backendSigner`: The address of the backend signer.
-   - Example parameter file: `./ignition/parameters/ClaimSoftCurrency.json`
+   - Example parameter file: `./ignition/parameters/ClaimRewards.json`
 
 2. **RetroDropWithMerkleModule**:
    - **Parameters**:
@@ -162,10 +162,10 @@ Note: All values in those JSON files are test values and do not correspond to re
 
 Example deployment commands:
 
-1. **ClaimSoftCurrency**:
+1. **ClaimRewards**:
 
    ```bash
-   npx hardhat ignition deploy ./ignition/modules/ClaimSoftCurrency.ts --parameters ./ignition/parameters/ClaimSoftCurrency.json --network <network> --verify
+   npx hardhat ignition deploy ./ignition/modules/ClaimRewards.ts --parameters ./ignition/parameters/ClaimRewards.json --network <network> --verify
    ```
 
 2. **RetroDropWithMerkle**:
