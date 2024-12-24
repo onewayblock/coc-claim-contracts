@@ -7,6 +7,8 @@ This repository contains two smart contracts designed for managing point claims 
 1. **ClaimSoftCurrency**: A contract allowing users to claim points periodically, relying on backend-generated signatures for validation.
 2. **RetroDropWithMerkle**: A contract enabling eligible users to make a one-time claim of points using a Merkle tree for verifying user eligibility.
 
+---
+
 ## Contracts
 
 ### 1. **ClaimSoftCurrency**
@@ -63,6 +65,20 @@ This repository contains two smart contracts designed for managing point claims 
 
 ---
 
+## Events
+
+- **ClaimSoftCurrency**:
+
+  - `PointsClaimed(address indexed user, uint256 points)`
+  - `BackendSignerChanged(address newBackendSigner)`
+
+- **RetroDropWithMerkle**:
+
+  - `PointsClaimed(address indexed user, uint256 points)`
+  - `MerkleRootUpdated(bytes32 newMerkleRoot)`
+
+---
+
 ## Security Considerations
 
 - **Backend Trust**: `ClaimSoftCurrency` relies on the integrity of the backend for generating valid signatures.
@@ -77,7 +93,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 1. **Node.js**: Ensure you have Node.js installed. Recommended version aligns with the `hardhat` version specified in the project.
 2. **Hardhat**: A development environment for Ethereum.
-3. **Typescript**: Install the necessary TypeScript dependencies for testing and development.
+3. **TypeScript**: Install the necessary TypeScript dependencies for testing and development.
 
 ### Installation
 
@@ -85,25 +101,46 @@ This repository contains two smart contracts designed for managing point claims 
 2. Run `npm install` to install dependencies.
 3. If additional dependencies are needed, they will be listed in the `package.json` file.
 
-### Testing
+### Environment Variables
 
-Run the following command to execute the tests:
+Ensure you create a `.env` file at the root of the project. Populate it with the following variables:
+
+```plaintext
+PRIVATE_KEY= # Your private key for deploying contracts
+ALCHEMY_API_KEY= # API key for Alchemy (or other provider)
+ETHERSCAN_API_KEY= # API key for contract verification on Etherscan
+BASESCAN_API_KEY= # API key for contract verification on BaseScan
+```
+
+---
+
+## Testing
+
+Run the following commands to compile and test the contracts:
 
 ```bash
+npm install
 npx hardhat compile
 npx hardhat test
 ```
 
 ---
 
-## Events
+## Deployment Instructions
 
-- **ClaimSoftCurrency**
+To deploy the contracts, use Hardhat Ignition. Each contract has a separate deployment module:
 
-  - `PointsClaimed(address indexed user, uint256 points)`
-  - `BackendSignerChanged(address newBackendSigner)`
+1. **ClaimSoftCurrency**:
 
-- **RetroDropWithMerkle**
+   ```bash
+   npx hardhat ignition deploy ./ignition/modules/ClaimSoftCurrency.ts --network <network> --verify
+   ```
 
-  - `PointsClaimed(address indexed user, uint256 points)`
-  - `MerkleRootUpdated(bytes32 newMerkleRoot)`
+2. **RetroDropWithMerkle**:
+
+   ```bash
+   npx hardhat ignition deploy ./ignition/modules/RetroDropWithMerkle.ts --network <network> --verify
+   ```
+
+Replace `<network>` with your desired network (e.g., `base-mainnet`, `ethereum-mainnet`, etc.).  
+Use the `--verify` flag if the appropriate API key for contract verification is provided in the `.env` file.
