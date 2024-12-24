@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import { ethers } from 'hardhat';
-import { Claim } from '../typechain-types';
+import { ClaimSoftCurrency } from '../typechain-types';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
 
 describe('Claim Contract', () => {
-  let claim: Claim;
+  let claim: ClaimSoftCurrency;
   let owner: SignerWithAddress, user: SignerWithAddress, backendSigner: SignerWithAddress, newSigner: SignerWithAddress;
   const chainId = 31337;
 

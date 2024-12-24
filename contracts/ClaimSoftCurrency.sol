@@ -6,11 +6,11 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol"; // L
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol"; // Utility for Ethereum-signed message hashes
 
 /**
- * @title Claim
+ * @title ClaimSoftCurrency
  * @dev Contract for managing claims of activity points with signature verification.
  *      Includes functionality for secure backend signature validation.
  */
-contract Claim is Ownable {
+contract ClaimSoftCurrency is Ownable {
     using ECDSA for bytes32;
 
     /// @notice Address of the backend signer responsible for generating valid signatures

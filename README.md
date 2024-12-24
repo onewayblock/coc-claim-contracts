@@ -1,82 +1,119 @@
-# Smart Contract Auditing: RetroDrop & Claim
+# ClaimSoftCurrency, RetroDrop, and RetroDropWithMerkle Contracts
 
-This repository contains three smart contracts: **RetroDrop**, **Claim**, and **RetroDropWithMerkle**, designed to handle activity point claims and rewards using secure signature verification and Merkle tree-based validation.
+## Overview
 
-## Contracts Overview
+This repository contains three smart contracts designed for managing point claims on-chain. Each contract has unique features and use cases tailored to specific scenarios:
 
-### RetroDrop
+1. **ClaimSoftCurrency**: A contract allowing users to claim points periodically, relying on backend-generated signatures for validation.
+2. **RetroDrop**: A contract enabling eligible users to make a one-time claim of points using verified backend signatures.
+3. **RetroDropWithMerkle**: A variation of RetroDrop that uses a Merkle tree for verifying user eligibility, eliminating the need for backend signature generation.
 
-- **Purpose**: Manages activity points awarded to users for specific actions.
-- **Key Features**:
-  - Verifies claims using a backend-generated signature.
-  - Tracks claimed points for each user.
-  - Supports updating the backend signer address by the contract owner.
+## Contracts
 
-### Claim
+### 1. **ClaimSoftCurrency**
 
-- **Purpose**: Facilitates point claims with flexibility in specifying the claimed points.
-- **Key Features**:
-  - Verifies the authenticity of claims using ECDSA signatures.
-  - Tracks the cumulative points claimed by each user.
-  - Allows the owner to update the backend signer address.
+#### Purpose
 
-### RetroDropWithMerkle
+- Designed to encourage on-chain activity by allowing users to claim points at regular intervals.
+- The backend is fully trusted to handle eligibility checks and signature generation.
 
-- **Purpose**: Manages activity points claims using a Merkle tree for eligibility verification.
-- **Key Features**:
-  - Uses a Merkle root to validate whether a user is eligible to claim points.
-  - Allows users to prove their eligibility using Merkle proofs.
-  - Tracks whether a user has already claimed their points.
-  - The owner can update the Merkle root.
+#### Workflow
 
-## Contract Details
+1. A user triggers a claim action via the frontend.
+2. The backend verifies the user's eligibility and generates a signature.
+3. The user sends an on-chain transaction with the provided signature.
+4. The contract validates the signature and updates the user's claimed points.
 
-### Common Features
+#### Key Features
 
-- **Signature Validation**: Contracts like **RetroDrop** and **Claim** use the `ECDSA` library to validate signatures.
-- **Replay Protection**: All contracts prevent the reuse of transaction signatures through mappings of executed message hashes.
-- **Ownership**: The contracts leverage OpenZeppelin's `Ownable` contract for secure administrative controls.
+- **Backend Signer**: Ensures that only valid claims are processed.
+- **Mapping for Points Tracking**: Keeps a record of total points claimed by each user.
+- **Replay Protection**: Prevents reuse of the same message hash through a nonce-based mechanism.
 
-### **RetroDropWithMerkle** Specific Features
+#### Key Functions
 
-- **Merkle Tree Validation**: Instead of signature-based validation, this contract uses a Merkle tree for eligibility verification.
-- **Merkle Proof**: Users must provide a Merkle proof to prove their eligibility for claiming points.
-- **Points Claiming**: Similar to the other contracts, users can claim their points only if they are part of the Merkle tree and have not claimed them already.
-- **Merkle Root Management**: The owner can update the Merkle root, which is used for verifying the eligibility of future claims.
+- `claimPoints(uint256 points, uint256 nonce, uint256 chainId, bytes memory signature)`: Allows users to claim points after verifying the backend's signature.
+- `setBackendSigner(address newSigner)`: Updates the address of the backend signer (restricted to the owner).
 
-### Events
+---
 
-- **BackendSignerChanged**: Triggered when the backend signer address changes (for **RetroDrop** and **Claim** contracts).
-- **ActivityPointsClaimed**/**PointsClaimed**: Logs successful claims with user details and points awarded (for **RetroDrop** and **Claim** contracts).
-- **MerkleRootUpdated**: Triggered when the Merkle root is updated (for **RetroDropWithMerkle** contract).
+### 2. **RetroDrop**
+
+#### Purpose
+
+- Allows eligible users to make a one-time claim of points as a reward for meeting specific criteria, e.g. interacting with smart contracts on Base chain.
+
+#### Workflow
+
+1. A list of eligible users is determined off-chain based on predefined criteria.
+2. A user initiates a claim, and the backend generates a signature to verify eligibility.
+3. The user submits an on-chain transaction with the signature.
+4. The contract validates the claim and records it to ensure it is not repeated.
+
+#### Key Features
+
+- **One-Time Claim**: Users can only claim points once.
+- **Activity Points Configuration**: The owner can define the number of points awarded per claim.
+- **Signature Verification**: Validates claims using backend-generated signatures.
+
+#### Key Functions
+
+- `claimPoints(uint256 nonce, uint256 chainId, bytes memory signature)`: Processes one-time point claims for eligible users.
+- `setBackendSigner(address newSigner)`: Updates the backend signer address (restricted to the owner).
+- `setActivityPointsForClaim(uint256 newPoints)`: Adjusts the points awarded per claim (restricted to the owner).
+- `hasClaimed(address user, uint256 nonce, uint256 chainId)`: Checks if a user has already claimed points.
+
+---
+
+### 3. **RetroDropWithMerkle**
+
+#### Purpose
+
+- Similar to RetroDrop but uses a Merkle tree for eligibility verification.
+- Provides a gas-efficient and secure method for proving user participation.
+
+#### Workflow
+
+1. An off-chain process generates a Merkle tree from the list of eligible users and their corresponding points.
+2. A user submits a claim along with a Merkle proof.
+3. The contract verifies the proof against the Merkle root.
+4. If the proof is valid, the user's claim is processed.
+
+#### Key Features
+
+- **Merkle Tree Verification**: Verifies user eligibility without relying on signatures.
+- **Immutable Claims**: Each user can claim only once.
+- **Owner-Controlled Merkle Root**: The owner can update the Merkle root to reflect new eligibility criteria.
+
+#### Key Functions
+
+- `claimPoints(uint256 points, bytes32[] calldata proof)`: Allows users to claim points by providing a valid Merkle proof.
+- `setMerkleRoot(bytes32 _newMerkleRoot)`: Updates the Merkle root (restricted to the owner).
+- `isParticipating(address user, uint256 points, bytes32[] calldata proof)`: Checks if a user is part of the current Merkle tree.
+
+---
 
 ## Security Considerations
 
-1. **Signature Verification**: Ensures that claims are authorized by the backend signer (in **RetroDrop** and **Claim** contracts).
-2. **Merkle Proof Verification**: Ensures that a user is eligible for claiming points based on their proof in the Merkle tree (in **RetroDropWithMerkle** contract).
-3. **Replay Protection**: Safeguards against reusing the same signature across transactions (in **RetroDrop** and **Claim** contracts).
-4. **Access Control**: Only the owner can modify critical parameters like the backend signer address and Merkle root.
+- **Backend Trust**: Both `ClaimSoftCurrency` and `RetroDrop` rely on the integrity of the backend for generating valid signatures.
+- **Replay Protection**: All contracts implement nonce or Merkle proof mechanisms to prevent replay attacks.
+- **Ownership**: Sensitive functions like updating the backend signer or Merkle root are restricted to the contract owner.
 
-## Deployment
+---
 
-Ensure to replace placeholder values (e.g., `_backendSigner`, `_merkleRoot`) with actual deployment values. The owner account should be securely managed.
+## Events
 
-### RetroDrop with Merkle Root
+- **ClaimSoftCurrency**
 
-For the **RetroDropWithMerkle** contract, make sure the Merkle root is updated before deploying, and ensure that eligible users' information is hashed and added to the Merkle tree.
+  - `PointsClaimed(address indexed user, uint256 points)`
+  - `BackendSignerChanged(address newBackendSigner)`
 
-## Testing
+- **RetroDrop**
 
-- **For RetroDrop and Claim**:
+  - `ActivityPointsClaimed(address indexed user, uint256 points)`
+  - `BackendSignerChanged(address newBackendSigner)`
+  - `ActivityPointsForClaimUpdated(uint256 newPoints)`
 
-  - Validate signature verification with various scenarios, including invalid and replayed signatures.
-  - Test the ownership functionality for administrative tasks.
-
-- **For RetroDropWithMerkle**:
-  - Test Merkle proof verification to ensure only eligible users can claim points.
-  - Test updating the Merkle root and ensuring the eligibility of new claims based on the updated root.
-  - Test that a user cannot claim points twice.
-
-## License
-
-This project is licensed under the MIT License.
+- **RetroDropWithMerkle**
+  - `PointsClaimed(address indexed user, uint256 points)`
+  - `MerkleRootUpdated(bytes32 newMerkleRoot)`
