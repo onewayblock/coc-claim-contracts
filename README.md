@@ -120,8 +120,8 @@ Run the following commands to compile and test the contracts:
 
 ```bash
 npm install
-npx hardhat compile
-npx hardhat test
+npm run compile
+npm run test
 ```
 
 ---
