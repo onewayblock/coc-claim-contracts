@@ -89,7 +89,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 - **RetroDropWithMerkle**:
 
-  - `PointClaimed(address indexed user, uint256 points)`: Event emitted when points are claimed
+  - `PointsClaimed(address indexed user, uint256 points)`: Event emitted when points are claimed
   - `MerkleRootUpdated(bytes32 newMerkleRoot)`: Event emitted when the Merkle root is updated
 
 ---
