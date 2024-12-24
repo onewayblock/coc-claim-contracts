@@ -103,7 +103,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 ### Environment Variables
 
-Ensure you create a `.env` file at the root of the project. Populate it with the following variables:
+Ensure you create a `.env` file at the root of the project if you plan to use the deployment scripts. This step is optional if you only intend to run tests. Populate the file with the following variables:
 
 ```plaintext
 PRIVATE_KEY= # Your private key for deploying contracts
