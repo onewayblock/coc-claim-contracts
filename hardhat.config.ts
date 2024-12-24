@@ -36,6 +36,14 @@ const config: HardhatUserConfig = {
             },
             network: 'base-sepolia',
           },
+          {
+            chainId: 8453,
+            urls: {
+              apiURL: 'https://api.basescan.org/api',
+              browserURL: 'https://basescan.org',
+            },
+            network: 'base-mainnet',
+          },
         ],
       },
 };
