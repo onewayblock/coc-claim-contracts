@@ -25,48 +25,100 @@ describe('Claim Contract', () => {
   describe('Claim Points', () => {
     it('Should allow a user to claim points with a valid signature', async () => {
       const pointsToClaim = 10;
+      const coinsToClaim = 100;
       const nonce = await claim.nonces(user.address);
 
       const messageHash = ethers.keccak256(
-        ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [user.address, pointsToClaim, coinsToClaim, nonce, chainId]
+        )
       );
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
+      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature))
+        .to.emit(claim, 'CurrencyClaimed')
+        .withArgs(user.address, pointsToClaim, coinsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
+      const claimedCoins = await claim.coinsClaimed(user.address);
       expect(claimedPoints).to.equal(pointsToClaim);
+      expect(claimedCoins).to.equal(coinsToClaim);
+    });
+
+    it('Should not allow a user to claim 0 points', async () => {
+      const pointsToClaim = 0;
+      const coinsToClaim = 100;
+      const nonce = await claim.nonces(user.address);
+
+      const messageHash = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [user.address, pointsToClaim, coinsToClaim, nonce, chainId]
+        )
+      );
+
+      const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
+
+      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidPoints()');
+    });
+
+    it('Should not allow a user to claim 0 coins', async () => {
+      const pointsToClaim = 10;
+      const coinsToClaim = 0;
+      const nonce = await claim.nonces(user.address);
+
+      const messageHash = ethers.keccak256(
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [user.address, pointsToClaim, coinsToClaim, nonce, chainId]
+        )
+      );
+
+      const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
+
+      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidCoins()');
     });
 
     it('Should not allow a user to claim points with an invalid signature', async () => {
       const pointsToClaim = 10;
+      const coinsToClaim = 100;
+
       const nonce = await claim.nonces(user.address);
 
       const invalidSignature = await newSigner.signMessage(
         ethers.getBytes(
           ethers.keccak256(
-            ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
+            ethers.AbiCoder.defaultAbiCoder().encode(
+              ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+              [user.address, pointsToClaim, coinsToClaim, nonce, chainId]
+            )
           )
         )
       );
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, invalidSignature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
+      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, invalidSignature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
     });
 
     it('Should not allow a user to reuse the same signature (replay protection)', async () => {
       const pointsToClaim = 10;
+      const coinsToClaim = 100;
+
       const nonce = await claim.nonces(user.address);
 
       const messageHash = ethers.keccak256(
-        ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [user.address, pointsToClaim, coinsToClaim, nonce, chainId]
+        )
       );
 
       const signature = await backendSigner.signMessage(ethers.getBytes(messageHash));
 
-      await claim.connect(user).claimPoints(pointsToClaim, signature);
+      await claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature);
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
+      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature)).to.be.revertedWithCustomError(claim, 'InvalidSigner()');
     });
   });
 
@@ -87,18 +139,27 @@ describe('Claim Contract', () => {
       await claim.connect(owner).setBackendSigner(newSigner.address);
 
       const pointsToClaim = 20;
+      const coinsToClaim = 200;
+
       const nonce = await claim.nonces(user.address);
 
       const messageHash = ethers.keccak256(
-        ethers.AbiCoder.defaultAbiCoder().encode(['address', 'uint256', 'uint256', 'uint256'], [user.address, pointsToClaim, nonce, chainId])
+        ethers.AbiCoder.defaultAbiCoder().encode(
+          ['address', 'uint256', 'uint256', 'uint256', 'uint256'],
+          [user.address, pointsToClaim, coinsToClaim, nonce, chainId]
+        )
       );
 
       const signature = await newSigner.signMessage(ethers.getBytes(messageHash));
 
-      await expect(claim.connect(user).claimPoints(pointsToClaim, signature)).to.emit(claim, 'PointsClaimed').withArgs(user.address, pointsToClaim);
+      await expect(claim.connect(user).claimCurrency(pointsToClaim, coinsToClaim, signature))
+        .to.emit(claim, 'CurrencyClaimed')
+        .withArgs(user.address, pointsToClaim, coinsToClaim);
 
       const claimedPoints = await claim.pointsClaimed(user.address);
+      const claimedCoins = await claim.coinsClaimed(user.address);
       expect(claimedPoints).to.equal(pointsToClaim);
+      expect(claimedCoins).to.equal(coinsToClaim);
     });
   });
 });

@@ -4,7 +4,7 @@
 
 This repository contains two smart contracts designed for managing point claims on-chain. Each contract has unique features and use cases tailored to specific scenarios:
 
-1. **ClaimSoftCurrency**: A contract allowing users to claim points periodically, relying on backend-generated signatures for validation.
+1. **ClaimSoftCurrency**: A contract allowing users to claim currency periodically, relying on backend-generated signatures for validation.
 2. **RetroDropWithMerkle**: A contract enabling eligible users to make a one-time claim of points using a Merkle tree for verifying user eligibility.
 
 ---
@@ -15,7 +15,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 #### Purpose
 
-- Designed to encourage on-chain activity by allowing users to claim points at regular intervals.
+- Designed to encourage on-chain activity by allowing users to claim points and coins at regular intervals.
 - The backend is fully trusted to handle eligibility checks and signature generation.
 
 #### Workflow
@@ -23,17 +23,17 @@ This repository contains two smart contracts designed for managing point claims 
 1. A user triggers a claim action via the frontend.
 2. The backend verifies the user's eligibility and generates a signature.
 3. The user sends an on-chain transaction with the provided signature.
-4. The contract validates the signature and updates the user's claimed points.
+4. The contract validates the signature and updates the user's claimed currency.
 
 #### Key Features
 
 - **Backend Signer**: Ensures that only valid claims are processed.
-- **Mapping for Points Tracking**: Keeps a record of total points claimed by each user.
+- **Mappings for Points and Coins Tracking**: Keeps a record of total points and coins claimed by each user.
 - **Replay Protection**: Prevents reuse of the same message hash through a nonce-based mechanism.
 
 #### Key Functions
 
-- `claimPoints(uint256 points, bytes memory signature)`: Allows users to claim points after verifying the backend's signature.
+- `claimCurrency(uint256 points, uint256 coins, bytes memory signature)`: Allows users to claim currency after verifying the backend's signature.
 - `setBackendSigner(address newSigner)`: Updates the address of the backend signer (restricted to the owner).
 
 ### 2. **RetroDropWithMerkle**
@@ -71,6 +71,8 @@ This repository contains two smart contracts designed for managing point claims 
 
 - `InvalidSigner()`: Reverts when the signer of the message is invalid or unauthorized.
 - `InvalidSignerAddress()`: Reverts when the provided signer address is invalid (e.g., zero address).
+- `InvalidPoints()`: Reverts when the provided points value is zero or invalid.
+- `InvalidCoins()`: Reverts when the provided coins value is zero or invalid.
 
 ### RetroDropWithMerkle
 
@@ -84,7 +86,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 - **ClaimSoftCurrency**:
 
-  - `PointsClaimed(address indexed user, uint256 points)`: Event emitted when points are successfully claimed
+  - `CurrencyClaimed(address indexed user, uint256 points, uint256 coins)`: Event emitted when points and coins are successfully claimed
   - `BackendSignerChanged(address newBackendSigner)`: Event emitted when the backend signer address is updated
 
 - **RetroDropWithMerkle**:
