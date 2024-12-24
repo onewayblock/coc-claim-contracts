@@ -91,7 +91,7 @@ This repository contains two smart contracts designed for managing point claims 
 
 ### Prerequisites
 
-1. **Node.js**: Ensure you have Node.js installed. Recommended version aligns with the `hardhat` version specified in the project.
+1. **Node.js**: Ensure you have Node.js installed. The **recommended version is v22 or higher** for optimal compatibility.
 2. **Hardhat**: A development environment for Ethereum.
 3. **TypeScript**: Install the necessary TypeScript dependencies for testing and development.
 
@@ -142,5 +142,5 @@ To deploy the contracts, use Hardhat Ignition. Each contract has a separate depl
    npx hardhat ignition deploy ./ignition/modules/RetroDropWithMerkle.ts --network <network> --verify
    ```
 
-Replace `<network>` with your desired network (e.g., `base-mainnet`, `ethereum-mainnet`, etc.).  
+Replace `<network>` with your desired network (e.g., `base-mainnet`, `ethereum-mainnet`, etc.). You can see list of networks in `hardhat.config.ts` file.
 Use the `--verify` flag if the appropriate API key for contract verification is provided in the `.env` file.
